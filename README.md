@@ -27,9 +27,52 @@ The plugin auto-detects its environment on load:
 
 ## Install
 
-Installed via the **infra-TAK** console's CloudTAK Plugins marketplace, which clones this repo,
-copies `plugin/` into CloudTAK's `web/plugins/` and `server/` into `api/routes/`, then rebuilds
-the CloudTAK API image so the plugin is baked into the Vite bundle and the routes are loaded.
+This plugin has two halves that must land in two different places in your CloudTAK source tree —
+`plugin/` (the web UI, into `api/web/plugins/`) and `server/` (the API routes, into `api/routes/`).
+CloudTAK's built-in `WEB_PLUGINS` env var **cannot** install it: it only handles the web half, it
+clones the whole repo (nesting the plugin one level too deep for Vite), and it drops the server
+`*.ts` files where the web build type-checks them and fails. So use one of the two paths below.
+
+### Option 1 — infra-TAK console (no terminal needed)
+
+If your CloudTAK was deployed by [infra-TAK](https://github.com/takwerx/infra-TAK), install/update/
+remove this plugin from the **CloudTAK Plugins marketplace** in the console. It clones this repo,
+copies the two halves into place, and rebuilds the CloudTAK API image for you.
+
+### Option 2 — standalone CloudTAK (`install.sh`)
+
+For CloudTAK deployments **not** managed by infra-TAK. `install.sh` does exactly what the infra-TAK
+installer does — copies `plugin/` → `api/web/plugins/tak-dispatcher/`, copies `server/*.ts` →
+`api/routes/`, then rebuilds and restarts the CloudTAK API image.
+
+```bash
+# clone this repo somewhere on the CloudTAK host
+git clone https://github.com/takwerx/cloudtak-dispatcher-plugin
+cd cloudtak-dispatcher-plugin
+
+# install into your CloudTAK checkout (defaults to ~/CloudTAK)
+./install.sh /path/to/CloudTAK
+```
+
+The rebuild takes 5–15 minutes. When it finishes, in CloudTAK go to **Settings → Refresh App** to
+activate the new service worker (a normal hard-refresh does **not** work — the service worker
+intercepts requests), or close all CloudTAK tabs and reopen. The plugin appears at the bottom of
+the right-side menu.
+
+**Updating** (pull the latest version and rebuild):
+
+```bash
+./install.sh --pull /path/to/CloudTAK
+```
+
+**Removing:**
+
+```bash
+./install.sh --remove /path/to/CloudTAK
+```
+
+Run `./install.sh --help` for all options (`--no-build` copies files without rebuilding).
+Requires `bash`, `docker` + `docker compose` (and `git` for `--pull`).
 
 ## Requirements
 

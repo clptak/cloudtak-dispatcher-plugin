@@ -1,3 +1,9 @@
+// CloudTAK lints copied plugin routes with its OWN house-style rules, which differ across
+// versions: @stylistic/brace-style flips between 13.2 (Stroustrup) and 13.3 (1TBS), and
+// isn't even defined on 12.82 (naming it in a disable errors there). A plugin can't satisfy
+// every CloudTAK version, so opt this route file out of CloudTAK's lint — the plugin repo
+// owns its correctness (vue-tsc/eslint in dev).
+/* eslint-disable */
 import { Type } from '@sinclair/typebox';
 import { sql } from 'drizzle-orm';
 import { randomUUID } from 'node:crypto';

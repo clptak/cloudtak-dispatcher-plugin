@@ -58,7 +58,8 @@ function asArray(v: unknown): unknown[] {
     for (let i = 0; i < 4 && typeof x === 'string'; i++) {
         try {
             x = JSON.parse(x);
-        } catch {
+        }
+        catch {
             return [];
         }
     }
@@ -105,7 +106,8 @@ export default async function router(schema: Schema, config: Config) {
                 closed_at   TIMESTAMPTZ
             )
         `);
-    } catch (err) {
+    }
+    catch (err) {
         console.error('[dispatcher] table bootstrap failed', err);
     }
 
@@ -124,7 +126,8 @@ export default async function router(schema: Schema, config: Config) {
                 FROM dispatcher_events ORDER BY created_at DESC
             `);
             res.json({ events });
-        } catch (err) {
+        }
+        catch (err) {
             Err.respond(err, res);
         }
     });
@@ -151,7 +154,8 @@ export default async function router(schema: Schema, config: Config) {
                 RETURNING id, name, prefix, feed_guid, feed_name, status, seq, created_at, created_by
             `);
             res.json({ event: events[0] });
-        } catch (err) {
+        }
+        catch (err) {
             Err.respond(err, res);
         }
     });
@@ -172,7 +176,8 @@ export default async function router(schema: Schema, config: Config) {
             `);
             if (!events.length) throw new Err(404, null, 'Event not found');
             res.json({ event: events[0] });
-        } catch (err) {
+        }
+        catch (err) {
             Err.respond(err, res);
         }
     });
@@ -188,7 +193,8 @@ export default async function router(schema: Schema, config: Config) {
             await Auth.is_auth(config, req);
             await config.pg.execute(sql`DELETE FROM dispatcher_events WHERE id = ${req.params.eventid}`);
             res.json({ status: 200, message: 'deleted' });
-        } catch (err) {
+        }
+        catch (err) {
             Err.respond(err, res);
         }
     });
@@ -211,7 +217,8 @@ export default async function router(schema: Schema, config: Config) {
                 ORDER BY created_at ASC
             `);
             res.json({ incidents: incidents.map(mapIncident) });
-        } catch (err) {
+        }
+        catch (err) {
             Err.respond(err, res);
         }
     });
@@ -254,7 +261,8 @@ export default async function router(schema: Schema, config: Config) {
                           status, assigned, notes, created_at, closed_at
             `);
             res.json({ incident: mapIncident(incidents[0]) });
-        } catch (err) {
+        }
+        catch (err) {
             Err.respond(err, res);
         }
     });
@@ -323,7 +331,8 @@ export default async function router(schema: Schema, config: Config) {
                           status, assigned, notes, created_at, closed_at
             `);
             res.json({ incident: mapIncident(incidents[0]) });
-        } catch (err) {
+        }
+        catch (err) {
             Err.respond(err, res);
         }
     });

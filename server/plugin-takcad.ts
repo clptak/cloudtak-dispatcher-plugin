@@ -69,7 +69,8 @@ export default async function router(schema: Schema, config: Config) {
             }
             const json = await r.json() as NominatimFeature[];
             res.json({ suggestions: (Array.isArray(json) ? json : []).map(nominatimToSuggestion) });
-        } catch (err) {
+        }
+        catch (err) {
             Err.respond(err, res);
         }
     });
@@ -96,7 +97,8 @@ export default async function router(schema: Schema, config: Config) {
             }
             const f = await r.json() as NominatimFeature;
             res.json({ suggestion: f && f.lat ? nominatimToSuggestion(f) : null });
-        } catch (err) {
+        }
+        catch (err) {
             Err.respond(err, res);
         }
     });
@@ -126,7 +128,8 @@ export default async function router(schema: Schema, config: Config) {
             if (req.query.connection) {
                 const connection = await config.models.Connection.from(parseInt(String(req.query.connection)));
                 api = await TAKAPI.init(new URL(String(config.server.api)), new APIAuthCertificate(connection.auth.cert, connection.auth.key));
-            } else {
+            }
+            else {
                 const user = await Auth.as_user(config, req);
                 const profile = await config.models.Profile.from(user.email);
                 api = await TAKAPI.init(new URL(String(config.server.api)), new APIAuthCertificate(profile.auth.cert, profile.auth.key));
@@ -140,7 +143,8 @@ export default async function router(schema: Schema, config: Config) {
             // header ("accept must be specified") — node-tak sends none by default.
             const data = await api.fetch(new URL(`${TAKCAD_BASE}?${params.toString()}`, String(config.server.api)), { method: 'GET', headers: { Accept: 'application/json' } });
             res.json(data);
-        } catch (err) {
+        }
+        catch (err) {
             Err.respond(err, res);
         }
     });
@@ -168,7 +172,8 @@ export default async function router(schema: Schema, config: Config) {
             if (req.query.connection) {
                 const connection = await config.models.Connection.from(parseInt(String(req.query.connection)));
                 api = await TAKAPI.init(new URL(String(config.server.api)), new APIAuthCertificate(connection.auth.cert, connection.auth.key));
-            } else {
+            }
+            else {
                 const user = await Auth.as_user(config, req);
                 const profile = await config.models.Profile.from(user.email);
                 api = await TAKAPI.init(new URL(String(config.server.api)), new APIAuthCertificate(profile.auth.cert, profile.auth.key));
@@ -184,7 +189,8 @@ export default async function router(schema: Schema, config: Config) {
                 body: req.body,
             });
             res.json(data);
-        } catch (err) {
+        }
+        catch (err) {
             Err.respond(err, res);
         }
     });
@@ -208,7 +214,8 @@ export default async function router(schema: Schema, config: Config) {
             if (req.query.connection) {
                 const connection = await config.models.Connection.from(parseInt(String(req.query.connection)));
                 api = await TAKAPI.init(new URL(String(config.server.api)), new APIAuthCertificate(connection.auth.cert, connection.auth.key));
-            } else {
+            }
+            else {
                 const user = await Auth.as_user(config, req);
                 const profile = await config.models.Profile.from(user.email);
                 api = await TAKAPI.init(new URL(String(config.server.api)), new APIAuthCertificate(profile.auth.cert, profile.auth.key));
@@ -220,7 +227,8 @@ export default async function router(schema: Schema, config: Config) {
                 body: req.body,
             });
             res.json(data);
-        } catch (err) {
+        }
+        catch (err) {
             Err.respond(err, res);
         }
     });
@@ -244,7 +252,8 @@ export default async function router(schema: Schema, config: Config) {
             if (req.query.connection) {
                 const connection = await config.models.Connection.from(parseInt(String(req.query.connection)));
                 api = await TAKAPI.init(new URL(String(config.server.api)), new APIAuthCertificate(connection.auth.cert, connection.auth.key));
-            } else {
+            }
+            else {
                 const user = await Auth.as_user(config, req);
                 const profile = await config.models.Profile.from(user.email);
                 api = await TAKAPI.init(new URL(String(config.server.api)), new APIAuthCertificate(profile.auth.cert, profile.auth.key));
@@ -256,7 +265,8 @@ export default async function router(schema: Schema, config: Config) {
 
             const data = await api.fetch(new URL(`${TAKCAD_BASE}?${params.toString()}`, String(config.server.api)), { method: 'DELETE', headers: { Accept: 'application/json' } });
             res.json(data ?? { status: 200, message: 'deleted' });
-        } catch (err) {
+        }
+        catch (err) {
             Err.respond(err, res);
         }
     });

@@ -441,9 +441,9 @@ async function submitStandalone(address: string) {
 
     saving.value = true;
     try {
-        // Persist server-side first; the server assigns the incident number (<prefix>-NNN)
-        // and returns the full row, shared with every dispatcher on this CloudTAK.
-        const incident = await createIncident(event.id, {
+        // Persist the record to the event's mission log (shared with every dispatcher
+        // on this CloudTAK). The incident number (<prefix>-NNN) is assigned here.
+        const incident = await createIncident(event, {
             type:       form.incidentType,
             address,
             lat:        form.lat!,

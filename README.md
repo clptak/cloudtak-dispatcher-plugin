@@ -4,46 +4,53 @@ A dispatcher plugin for [CloudTAK](https://github.com/dfpc-coe/CloudTAK) — cre
 incidents on the map, organize them under named **Events**, assign responders, and notify them
 via mission chat and direct GeoChat.
 
-## Modes
+It runs **route-free**: a pure web bundle with **no files added to CloudTAK's `api/routes/`**
+and no API image rebuild. All shared state lives on CloudTAK's native DataSync (mission) APIs.
+See [docs/ROUTE-FREE-STANDALONE.md](docs/ROUTE-FREE-STANDALONE.md) for the design.
 
-The plugin auto-detects its environment on load:
+## How it works
 
-- **Standalone** (no external dependency) — Events and Incidents are stored server-side in
-  CloudTAK's own database and shared live across every dispatcher on that CloudTAK. An **Event**
-  (e.g. `2025-FESTIVAL`) is tied 1:1 to a DataSync feed and holds many Incidents. Incidents
-  persist through close (and can be reopened); they are removed only when the Event is nuked.
-- **TAK-CAD** — if the TAK-CAD TAK Server plugin is detected, the full CAD UI (Vehicles,
-  Personnel, incident types/roles) lights up on top of the standalone capabilities.
+An **Event** (e.g. `2025-FESTIVAL`) is a DataSync **mission/feed**; its dispatcher metadata
+(display name, incident-number prefix, active/archived) lives in the mission's `keywords`.
+Each **Incident** is a structured record stored as a mission-**log** entry (`DISP|<uid>|<json>`)
+plus a sanitized CoT marker on the feed. Because Events and Incidents ride the shared mission,
+the board is live across every dispatcher subscribed to that feed. Incidents persist through
+close (and can be reopened) and age out with the feed's mission-log retention (30 days).
+
+Address autocomplete/reverse-geocode uses **OpenRouteService** through CloudTAK's built-in
+**Plugin Proxy** (no `api/routes` and no CSP/nginx change). An admin enables it under
+**Admin → Config → "Plugin Proxy"** and whitelists `https://api.openrouteservice.org`; set
+your ORS key in `plugin/lib/takcad-client.ts` (`ORS_API_KEY`). Without a key or whitelist
+entry, geocoding simply returns nothing and operators place incidents with **pick on map**
+and a free-text address. (The key ships in the web bundle — use a rate-limited ORS key.)
 
 ## Layout
 
 - `plugin/` — the CloudTAK web plugin (Vue 3 / TypeScript), discovered and bundled by CloudTAK's
-  Vite build into `web/plugins/`.
-- `server/` — CloudTAK API route files copied into CloudTAK's `api/routes/`:
-  - `plugin-dispatcher.ts` — the standalone Events/Incidents store (CloudTAK Postgres) + CRUD
-    endpoints under `/api/dispatcher/…`.
-  - `plugin-takcad.ts` — a server-side proxy to the TAK-CAD TAK Server plugin (and a keyless
-    Nominatim geocode helper), used only in TAK-CAD mode.
+  Vite build into `web/plugins/`. This is the entire deliverable.
+- `server/` — **obsolete, retained as no-op stubs.** Both files now register zero endpoints and
+  the directory is safe to delete (`git rm -r server/`). Kept only so an older installer that
+  still copies `server/*.ts` into `api/routes/` won't break.
 
 ## Install
 
-This plugin has two halves that must land in two different places in your CloudTAK source tree —
-`plugin/` (the web UI, into `api/web/plugins/`) and `server/` (the API routes, into `api/routes/`).
-CloudTAK's built-in `WEB_PLUGINS` env var **cannot** install it: it only handles the web half, it
-clones the whole repo (nesting the plugin one level too deep for Vite), and it drops the server
-`*.ts` files where the web build type-checks them and fails. So use one of the two paths below.
+Route-free build: only the **`plugin/`** web half needs to land in your CloudTAK tree
+(`api/web/plugins/`). The `server/` files are obsolete no-op stubs — copying them into
+`api/routes/` is harmless (they register nothing) and the directory is safe to delete. CloudTAK's
+built-in `WEB_PLUGINS` env var still **cannot** install this cleanly (it nests the repo one level
+too deep for Vite), so use one of the two paths below.
 
 ### Option 1 — infra-TAK console (no terminal needed)
 
 If your CloudTAK was deployed by [infra-TAK](https://github.com/takwerx/infra-TAK), install/update/
 remove this plugin from the **CloudTAK Plugins marketplace** in the console. It clones this repo,
-copies the two halves into place, and rebuilds the CloudTAK API image for you.
+copies the plugin into place, and rebuilds the CloudTAK API image for you.
 
 ### Option 2 — standalone CloudTAK (`install.sh`)
 
-For CloudTAK deployments **not** managed by infra-TAK. `install.sh` does exactly what the infra-TAK
-installer does — copies `plugin/` → `api/web/plugins/tak-dispatcher/`, copies `server/*.ts` →
-`api/routes/`, then rebuilds and restarts the CloudTAK API image.
+For CloudTAK deployments **not** managed by infra-TAK. `install.sh` copies `plugin/` →
+`api/web/plugins/tak-dispatcher/` (and the harmless `server/*.ts` stubs → `api/routes/`), then
+rebuilds and restarts the CloudTAK API image.
 
 ```bash
 # clone this repo somewhere on the CloudTAK host
@@ -73,6 +80,11 @@ the right-side menu.
 
 Run `./install.sh --help` for all options (`--no-build` copies files without rebuilding).
 Requires `bash`, `docker` + `docker compose` (and `git` for `--pull`).
+
+> **Geocoding setup (optional):** address lookup uses OpenRouteService via CloudTAK's native
+> Plugin Proxy. Set `ORS_API_KEY` in `plugin/lib/takcad-client.ts`, then in CloudTAK go to
+> **Admin → Config → "Plugin Proxy"**, enable it, and whitelist `https://api.openrouteservice.org`.
+> Without this, operators place incidents with **pick on map** + a free-text address.
 
 ## Requirements
 

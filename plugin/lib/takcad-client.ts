@@ -153,10 +153,20 @@ export async function getNextIncidentNumber(feed: MissionRef): Promise<string> {
     }
 }
 
-// ── Geocoding ────────────────────────────────────────────────────────────────
-// Proxied through CloudTAK (server route plugin-takcad.ts → OpenRouteService).
-// A direct browser call to openrouteservice.org is blocked by CloudTAK's CSP
-// (connect-src is 'self' only), so it must go server-side. Auth via std().
+// ── Geocoding (OpenRouteService via CloudTAK's native Plugin Proxy) ───────────
+//
+// Route-free: CloudTAK's CSP (`connect-src 'self'`) blocks the browser from calling
+// openrouteservice.org directly, and we add NO api/route. Instead we use CloudTAK's
+// built-in Plugin Proxy (`POST /api/proxy`, same-origin so CSP-allowed), which an
+// admin enables and whitelists under Admin → Config → "Plugin Proxy". Whitelist the
+// ORS origin exactly as: https://api.openrouteservice.org
+//
+// NOTE: the ORS key below ships in the web bundle (the request URL is built in the
+// browser). Use a rate-limited ORS key and restrict it if your ORS plan allows. The
+// proxy only solves CSP/CORS — it does not hide the key.
+const ORS_ORIGIN = 'https://api.openrouteservice.org';
+const ORS_API_KEY = ''; // ← paste your openrouteservice.org API key here
+
 export interface GeocodeSuggestion {
     label:      string;
     lat:        number;
@@ -168,15 +178,65 @@ export interface GeocodeSuggestion {
     country:    string;
 }
 
+interface ProxyResponse { status: number; headers: Record<string, string>; body: unknown }
+
+// Call ORS through CloudTAK's Plugin Proxy. Returns the parsed JSON body (the proxy
+// already JSON-parses application/json responses) or null on any failure.
+async function orsProxyGet(path: string): Promise<unknown | null> {
+    if (!ORS_API_KEY) return null;
+    try {
+        const r = await std('/api/proxy', {
+            method: 'POST',
+            body: { url: `${ORS_ORIGIN}${path}`, method: 'GET' },
+        }) as ProxyResponse;
+        if (!r || r.status < 200 || r.status >= 300) return null;
+        return r.body ?? null;
+    } catch {
+        return null;
+    }
+}
+
+interface PeliasFeature {
+    geometry?: { coordinates?: [number, number] };
+    properties?: {
+        label?: string; name?: string; housenumber?: string; street?: string;
+        locality?: string; county?: string; region?: string; postalcode?: string; country?: string;
+    };
+}
+
+function peliasToSuggestion(f: PeliasFeature): GeocodeSuggestion | null {
+    const c = f.geometry?.coordinates;
+    if (!c || c.length < 2) return null;
+    const p = f.properties ?? {};
+    const street = [p.housenumber, p.street].filter(Boolean).join(' ') || p.name || '';
+    return {
+        label:      p.label || street,
+        lon:        c[0],
+        lat:        c[1],
+        streetName: street,
+        city:       p.locality || p.county || '',
+        state:      p.region || '',
+        zipCode:    p.postalcode || '',
+        country:    p.country || '',
+    };
+}
+
 export async function geocodeAddress(query: string): Promise<GeocodeSuggestion[]> {
-    const qs = new URLSearchParams({ q: query });
-    const resp = await std(`/api/takcad/geocode?${qs.toString()}`, { method: 'GET' }) as { suggestions?: GeocodeSuggestion[] };
-    return resp.suggestions ?? [];
+    const qs = new URLSearchParams({ api_key: ORS_API_KEY, text: query, size: '5' });
+    const body = await orsProxyGet(`/geocode/search?${qs.toString()}`) as { features?: PeliasFeature[] } | null;
+    if (!body?.features) return [];
+    return body.features.map(peliasToSuggestion).filter((s): s is GeocodeSuggestion => s !== null);
 }
 
 // Reverse geocode a map-clicked point into an address (for "pick on map").
 export async function reverseGeocode(lat: number, lon: number): Promise<GeocodeSuggestion | null> {
-    const qs = new URLSearchParams({ lat: String(lat), lon: String(lon) });
-    const resp = await std(`/api/takcad/geocode/reverse?${qs.toString()}`, { method: 'GET' }) as { suggestion?: GeocodeSuggestion | null };
-    return resp.suggestion ?? null;
+    const qs = new URLSearchParams({
+        api_key: ORS_API_KEY,
+        'point.lat': String(lat),
+        'point.lon': String(lon),
+        size: '1',
+    });
+    const body = await orsProxyGet(`/geocode/reverse?${qs.toString()}`) as { features?: PeliasFeature[] } | null;
+    const f = body?.features?.[0];
+    return f ? peliasToSuggestion(f) : null;
 }

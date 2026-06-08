@@ -251,6 +251,8 @@ function closeEvent() {
 }
 
 async function detect() {
+    // Route-free build: there is no TAK-CAD server proxy, so the metadata probe
+    // fails fast and we run standalone on CloudTAK's native /api/marti endpoints.
     store.serverMode = 'detecting';
     try {
         await getIncidentMetadata();

@@ -165,6 +165,9 @@
                     />
                 </div>
             </template>
+
+            <!-- ── Footer: OpenRouteService geocoding key (per-device) ──────────── -->
+            <OrsKeyCard />
         </template>
     </div>
 </template>
@@ -177,6 +180,7 @@ import IncidentListView from './IncidentListView.vue';
 import VehicleListView  from './VehicleListView.vue';
 import PersonnelListView from './PersonnelListView.vue';
 import EventsView from './EventsView.vue';
+import OrsKeyCard from './OrsKeyCard.vue';
 import { getIncidentTypes, getVehicleTypes, getVehicles, getPersonnel, getRoles, getIncidentMetadata, getMissions } from '../lib/takcad-client.ts';
 import type { MissionRef } from '../lib/takcad-client.ts';
 import type { IncidentTypeRef, VehicleType, VehicleRef, PersonRef, Role } from '../lib/takcad-types.ts';

@@ -82,9 +82,12 @@ Run `./install.sh --help` for all options (`--no-build` copies files without reb
 Requires `bash`, `docker` + `docker compose` (and `git` for `--pull`).
 
 > **Geocoding setup (optional):** address lookup uses OpenRouteService via CloudTAK's native
-> Plugin Proxy. Set `ORS_API_KEY` in `plugin/lib/takcad-client.ts`, then in CloudTAK go to
-> **Admin → Config → "Plugin Proxy"**, enable it, and whitelist `https://api.openrouteservice.org`.
-> Without this, operators place incidents with **pick on map** + a free-text address.
+> Plugin Proxy. Enter your ORS key in the **"Geocoding key" card** at the bottom of the
+> Dispatcher panel (stored per-device; tap **Hide** to dismiss it, and the small "Geocoding
+> key" link brings it back). Then in CloudTAK go to **Admin → Config → "Plugin Proxy"**, enable
+> it, and whitelist `https://api.openrouteservice.org`. (A build-time `ORS_API_KEY` constant in
+> `plugin/lib/takcad-client.ts` can override the card for baked deployments.) Without a key,
+> operators place incidents with **pick on map** + a free-text address.
 
 ## Requirements
 

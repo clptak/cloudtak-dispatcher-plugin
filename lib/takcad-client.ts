@@ -9,6 +9,7 @@
  * DEL  /api/marti/plugins/takcad/submit?fn=<method>&uid=<uid>
  */
 
+import { Preferences } from '@capacitor/preferences';
 import { std } from '../../../src/std.ts';
 import type {
     IncidentRef, IncidentMetadata, IncidentTypeRef,
@@ -161,11 +162,24 @@ export async function getNextIncidentNumber(feed: MissionRef): Promise<string> {
 // admin enables and whitelists under Admin → Config → "Plugin Proxy". Whitelist the
 // ORS origin exactly as: https://api.openrouteservice.org
 //
-// NOTE: the ORS key below ships in the web bundle (the request URL is built in the
-// browser). Use a rate-limited ORS key and restrict it if your ORS plan allows. The
-// proxy only solves CSP/CORS — it does not hide the key.
+// The ORS key is entered in-app (the footer "Geocoding key" card in CadMain.vue) and stored
+// per-device in Capacitor Preferences under ORS_KEY_PREF. A build-time ORS_API_KEY can still
+// override it (e.g. for a baked deployment). Either way the key reaches the browser — use a
+// rate-limited ORS key; the proxy only solves CSP/CORS, it does not hide the key.
 const ORS_ORIGIN = 'https://api.openrouteservice.org';
-const ORS_API_KEY = ''; // ← paste your openrouteservice.org API key here
+const ORS_API_KEY = ''; // optional build-time override; normally set via the in-app card
+
+// Preferences key shared with components/OrsKeyCard.vue.
+export const ORS_KEY_PREF = 'dispatcher-ors-key';
+
+async function getOrsKey(): Promise<string> {
+    if (ORS_API_KEY) return ORS_API_KEY;
+    try {
+        return (await Preferences.get({ key: ORS_KEY_PREF })).value || '';
+    } catch {
+        return '';
+    }
+}
 
 export interface GeocodeSuggestion {
     label:      string;
@@ -180,18 +194,28 @@ export interface GeocodeSuggestion {
 
 interface ProxyResponse { status: number; headers: Record<string, string>; body: unknown }
 
-// Call ORS through CloudTAK's Plugin Proxy. Returns the parsed JSON body (the proxy
-// already JSON-parses application/json responses) or null on any failure.
+// ORS wants geo+json; the proxy forwards 'accept' (it's on its header allowlist).
+const ORS_HEADERS = { Accept: 'application/json, application/geo+json' };
+
+// Call ORS through CloudTAK's Plugin Proxy. Returns the parsed JSON body, or null on
+// failure — and logs the real cause (proxy disabled / origin not whitelisted / ORS 4xx)
+// to the console so geocoding problems are diagnosable instead of silently empty.
 async function orsProxyGet(path: string): Promise<unknown | null> {
-    if (!ORS_API_KEY) return null;
     try {
         const r = await std('/api/proxy', {
             method: 'POST',
-            body: { url: `${ORS_ORIGIN}${path}`, method: 'GET' },
+            body: { url: `${ORS_ORIGIN}${path}`, method: 'GET', headers: ORS_HEADERS },
         }) as ProxyResponse;
-        if (!r || r.status < 200 || r.status >= 300) return null;
+        if (!r || r.status < 200 || r.status >= 300) {
+            console.error('[dispatcher] ORS geocode failed', r?.status, r?.body);
+            return null;
+        }
         return r.body ?? null;
-    } catch {
+    } catch (err) {
+        // A throw here is almost always the CloudTAK Plugin Proxy itself rejecting the call:
+        // 403 "Proxy is disabled" or "Proxy origin ... is not allowed". Enable it and whitelist
+        // https://api.openrouteservice.org under Admin → Config → Plugin Proxy.
+        console.error('[dispatcher] ORS proxy request rejected (is Plugin Proxy enabled + whitelisted?)', err);
         return null;
     }
 }
@@ -222,7 +246,18 @@ function peliasToSuggestion(f: PeliasFeature): GeocodeSuggestion | null {
 }
 
 export async function geocodeAddress(query: string): Promise<GeocodeSuggestion[]> {
-    const qs = new URLSearchParams({ api_key: ORS_API_KEY, text: query, size: '5' });
+    const apiKey = await getOrsKey();
+    if (!apiKey) return [];
+    // Mirrors the canonical ORS geocode/search request: restrict to addresses across the
+    // openaddresses/openstreetmap/geonames sources within the US.
+    const qs = new URLSearchParams({
+        api_key: apiKey,
+        text: query,
+        size: '5',
+        'boundary.country': 'US',
+        sources: 'openaddresses,openstreetmap,geonames',
+        layers: 'address',
+    });
     const body = await orsProxyGet(`/geocode/search?${qs.toString()}`) as { features?: PeliasFeature[] } | null;
     if (!body?.features) return [];
     return body.features.map(peliasToSuggestion).filter((s): s is GeocodeSuggestion => s !== null);
@@ -230,8 +265,10 @@ export async function geocodeAddress(query: string): Promise<GeocodeSuggestion[]
 
 // Reverse geocode a map-clicked point into an address (for "pick on map").
 export async function reverseGeocode(lat: number, lon: number): Promise<GeocodeSuggestion | null> {
+    const apiKey = await getOrsKey();
+    if (!apiKey) return null;
     const qs = new URLSearchParams({
-        api_key: ORS_API_KEY,
+        api_key: apiKey,
         'point.lat': String(lat),
         'point.lon': String(lon),
         size: '1',

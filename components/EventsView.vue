@@ -177,7 +177,7 @@
 
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue';
-import { useMapStore } from '../../../src/stores/map.ts';
+import { useMapStore } from '@/stores/map.ts';
 import { getMissions } from '../lib/takcad-client.ts';
 import type { MissionRef } from '../lib/takcad-client.ts';
 import {

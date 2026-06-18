@@ -390,7 +390,7 @@ import { getVehicles, insertVehicle, updateVehicle, deleteVehicle } from '../lib
 import type { VehicleRef, VehicleType } from '../lib/takcad-types.ts';
 import { getContacts, sendAssignmentMessage } from '../lib/contacts-client.ts';
 import type { TakContact } from '../lib/contacts-client.ts';
-import { useMapStore } from '../../../src/stores/map.ts';
+import { useMapStore } from '@/stores/map.ts';
 
 const mapStore = useMapStore();
 

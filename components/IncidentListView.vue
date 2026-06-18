@@ -806,7 +806,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import { IconUsers } from '@tabler/icons-vue';
-import { useMapStore } from '../../../src/stores/map.ts';
+import { useMapStore } from '@/stores/map.ts';
 import IncidentForm from './IncidentForm.vue';
 import {
     getIncidentMetadata, getIncident,

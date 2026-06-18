@@ -8,17 +8,18 @@
         "check": "vue-tsc --noEmit"
     },
     "devDependencies": {
+        "@capacitor/preferences":              "^8.0.1",
         "@eslint/js":                        "^10.0.1",
-        "@tak-ps/cloudtak":                  "file:../../../CloudTAK/api/web",
-        "@tak-ps/node-cot":                  "^12.3.0",
-        "@tabler/icons-vue":                 "^3.31.0",
+        "@tak-ps/cloudtak":                  "file:../../CloudTAK/api/web",
+        "@tak-ps/node-cot":                  "^14.20.0",
+        "@tabler/icons-vue":                 "^3.0.0",
         "@typescript-eslint/eslint-plugin":  "^8.52.0",
         "@typescript-eslint/parser":         "^8.52.0",
-        "@vueuse/core":                      "^14.1.0",
+        "@vueuse/core":                      "^14.0.0",
         "eslint":                            "^10.0.1",
         "globals":                           "^17.3.0",
         "typescript":                        "^6.0.2",
-        "vue":                               "^3.5.26",
+        "vue":                               "^3.2.31",
         "vue-tsc":                           "^3.2.2"
     }
 }

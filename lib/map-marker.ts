@@ -1,8 +1,8 @@
-import { std } from '../../../src/std.ts';
+import { std } from '@/std.ts';
 import { normalize_geojson } from '@tak-ps/node-cot/normalize_geojson';
-import type { useMapStore } from '../../../src/stores/map.ts';
-import SubscriptionChat from '../../../src/base/subscription-chat.ts';
-import ProfileConfig from '../../../src/base/profile.ts';
+import type { useMapStore } from '@/stores/map.ts';
+import SubscriptionChat from '@/base/subscription-chat.ts';
+import ProfileConfig from '@/base/profile.ts';
 
 type MapStore = ReturnType<typeof useMapStore>;
 

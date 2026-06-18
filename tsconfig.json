@@ -10,7 +10,11 @@
         "resolveJsonModule":   true,
         "isolatedModules":     true,
         "allowImportingTsExtensions": true,
-        "noEmit":              true
+        "noEmit":              true,
+        "paths": {
+            "@/*":                 ["../../CloudTAK/api/web/src/*"],
+            "@tak-ps/cloudtak":    ["../../CloudTAK/api/web/plugin.ts"]
+        }
     },
     "include": ["**/*.ts", "**/*.vue"],
     "exclude": ["node_modules"]

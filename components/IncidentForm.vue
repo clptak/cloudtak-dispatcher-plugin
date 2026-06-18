@@ -253,7 +253,7 @@
 
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted } from 'vue';
-import { useMapStore } from '../../../src/stores/map.ts';
+import { useMapStore } from '@/stores/map.ts';
 import {
     getIncident, insertIncident, updateIncident,
     geocodeAddress, reverseGeocode,

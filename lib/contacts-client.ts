@@ -1,7 +1,7 @@
-import { std } from '../../../src/std.ts';
-import Chatroom from '../../../src/base/chatroom.ts';
-import ProfileConfig from '../../../src/base/profile.ts';
-import type { useMapStore } from '../../../src/stores/map.ts';
+import { std } from '@/std.ts';
+import Chatroom from '@/base/chatroom.ts';
+import ProfileConfig from '@/base/profile.ts';
+import type { useMapStore } from '@/stores/map.ts';
 
 type MapStore = ReturnType<typeof useMapStore>;
 

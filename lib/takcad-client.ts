@@ -10,7 +10,7 @@
  */
 
 import { Preferences } from '@capacitor/preferences';
-import { std } from '../../../src/std.ts';
+import { std } from '@/std.ts';
 import type {
     IncidentRef, IncidentMetadata, IncidentTypeRef,
     VehicleRef, VehicleType,

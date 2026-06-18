@@ -174,7 +174,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onErrorCaptured, watch } from 'vue';
-import ProfileConfig from '../../../src/base/profile.ts';
+import ProfileConfig from '@/base/profile.ts';
 import { IconHeadset } from '@tabler/icons-vue';
 import IncidentListView from './IncidentListView.vue';
 import VehicleListView  from './VehicleListView.vue';

@@ -1,7 +1,6 @@
 import type { App } from 'vue';
 import { markRaw } from 'vue';
-import type { PluginAPI, PluginInstance } from '../../plugin.ts';
-import type { MenuItemConfig } from '../../plugin.ts';
+import type { PluginAPI, PluginInstance, MenuItemConfig } from '@tak-ps/cloudtak';
 import { IconHeadset } from '@tabler/icons-vue';
 import CadMain from './components/CadMain.vue';
 

@@ -1,4 +1,4 @@
-import { std } from '../../../src/std.ts';
+import { std } from '@/std.ts';
 import { dispatcherStore } from './dispatcher-store.ts';
 
 // ─────────────────────────────────────────────────────────────────────────────
